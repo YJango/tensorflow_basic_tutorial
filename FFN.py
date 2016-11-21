@@ -1,8 +1,3 @@
-import tensorflow as tf
-import numpy as np
-import matplotlib.pyplot as plt
-%matplotlib inline
-
 class FNN(object):
     """Build a general FeedForward neural network
     Parameters
@@ -38,13 +33,18 @@ class FNN(object):
         self.L2_lambda = L2_lambda
         
         # Placeholders
-        self.inputs = tf.placeholder(tf.float32, [None, D_input], name="inputs")
-        self.labels = tf.placeholder(tf.float32, [None, D_label], name="labels")
-        self.drop_keep_rate = tf.placeholder(tf.float32, name="dropout_keep")
+        with tf.name_scope('Input'):
+            self.inputs = tf.placeholder(tf.float32, [None, D_input], name="inputs")
+        with tf.name_scope('Label'):
+            self.labels = tf.placeholder(tf.float32, [None, D_label], name="labels")
+        with tf.name_scope('keep_rate'):
+            self.drop_keep_rate = tf.placeholder(tf.float32, name="dropout_keep")
         
         # accumulate l2 regularization
+
         self.l2_penalty = tf.constant(0.0)
         
+        # build network
         self.build('FNN')
         
     def weight_init(self,shape):
@@ -59,25 +59,25 @@ class FNN(object):
         return tf.Variable(initial)
     
     def variable_summaries(self, var, name):
-        with tf.name_scope(name+'summaries'):
+        with tf.name_scope(name+'_summaries'):
             mean = tf.reduce_mean(var)
             tf.scalar_summary('mean/' + name, mean)
-        with tf.name_scope(name+'stddev'):
+        with tf.name_scope(name+'_stddev'):
             stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
-        tf.scalar_summary('stddev/' + name, stddev)
-        tf.scalar_summary('max/' + name, tf.reduce_max(var))
-        tf.scalar_summary('min/' + name, tf.reduce_min(var))
+        tf.scalar_summary('_stddev/' + name, stddev)
+        tf.scalar_summary('_max/' + name, tf.reduce_max(var))
+        tf.scalar_summary('_min/' + name, tf.reduce_min(var))
         tf.histogram_summary(name, var)
 
     def layer(self,in_tensor, in_dim, out_dim, layer_name, act=tf.nn.relu):
         with tf.name_scope(layer_name):
-            with tf.name_scope(layer_name+'weights'):
+            with tf.name_scope(layer_name+'_weights'):
                 weights = self.weight_init([in_dim, out_dim])
                 self.variable_summaries(weights, layer_name + '/weights')
-            with tf.name_scope(layer_name+'biases'):
+            with tf.name_scope(layer_name+'_biases'):
                 biases = self.bias_init([out_dim])
                 self.variable_summaries(biases, layer_name + '/biases')
-            with tf.name_scope(layer_name+'Wx_plus_b'):
+            with tf.name_scope(layer_name+'_Wx_plus_b'):
                 pre_activate = tf.matmul(in_tensor, weights) + biases
                 tf.histogram_summary(layer_name + '/pre_activations', pre_activate)
             activations = act(pre_activate, name='activation')
@@ -97,10 +97,10 @@ class FNN(object):
         
         #hidden layers
         self.hid_layers=[]
-        
+        self.total_l2=[]
         for l in range(self.Layers):
             incoming,l2_loss= self.layer(incoming,layer_nodes[l],layer_nodes[l+1],prefix+str(l),act=tf.nn.relu)
-            self.l2_penalty+=l2_loss
+            self.total_l2.append(l2_loss)
             print('Add dense layer: relu with drop_keep:%s' %self.drop_keep)
             print('    %sD --> %sD' %(layer_nodes[l],layer_nodes[l+1]))
             self.hid_layers.append(incoming)
@@ -109,11 +109,15 @@ class FNN(object):
             
         #output layer
         self.output,l2_loss= self.layer(incoming,layer_nodes[-1],self.D_label, layer_name='output',act=tf.identity)
-        self.l2_penalty+=l2_loss
+        self.total_l2.append(l2_loss)
         print('Add output layer: linear')
         print('    %sD --> %sD' %(layer_nodes[-1],self.D_label))
         
         #loss
+        with tf.name_scope('total_l2'):
+            for l2 in self.total_l2:
+                self.l2_penalty+=l2
+                
         if self.Task_type=='regression':
             with tf.name_scope('SSE'):
                 self.loss=tf.reduce_mean(tf.nn.l2_loss((self.output - self.labels)))
@@ -127,9 +131,14 @@ class FNN(object):
                 correct_prediction = tf.equal(tf.argmax(self.output, 1), tf.argmax(self.labels, 1))
                 self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
                 tf.scalar_summary('accuracy', self.accuracy)
+                
+        with tf.name_scope('total_loss'):
+            self.total_loss=self.loss + self.l2_penalty*self.L2_lambda
+            
         #train
         with tf.name_scope('train'):
-            self.train_step = tf.train.AdamOptimizer(self.learning_rate).minimize(self.loss + self.l2_penalty*self.L2_lambda)
+            self.train_step = tf.train.AdamOptimizer(self.learning_rate).minimize(self.total_loss)
+
 
     def shufflelists(self,lists):
         ri=np.random.permutation(len(lists[1]))
