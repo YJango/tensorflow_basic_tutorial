@@ -1,6 +1,6 @@
 {
   "name": "神经网络入门",
   "tagline": "",
-  "body": "### 基本操作演示\r\n\r\n* 内容讨论：[为何深层学习](https://yjango.gitbooks.io/superorganism/content/shen_ceng_wang_luo.html)\r\n* 内容实现（1）：[核心功能](https://yjango.gitbooks.io/superorganism/content/dai_ma_yan_shi.html)\r\n* TensorFlow：[基本用法](https://yjango.gitbooks.io/superorganism/content/tensorflowji_ben_yong_fa.html)\r\n\r\n",
+  "body": "### 基本操作演示\r\n\r\n* 内容讨论：[为何深层学习](https://yjango.gitbooks.io/superorganism/content/shen_ceng_wang_luo.html)\r\n* 内容实现（1）：[核心功能](https://yjango.gitbooks.io/superorganism/content/dai_ma_yan_shi.html)\r\n* TensorFlow：[基本用法](https://yjango.gitbooks.io/superorganism/content/tensorflowji_ben_yong_fa.html)\r\n* 内容实现（2）：[完善功能](https://yjango.gitbooks.io/superorganism/content/dai_ma_yan_shi_2.html)\r\n\r\n",
   "note": "Don't delete this file! It's used internally to help with page regeneration."
 }
