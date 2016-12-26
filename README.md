@@ -1,4 +1,4 @@
 # tensorflow 
-version 0.11
+version r0.12
 
 python2.7
