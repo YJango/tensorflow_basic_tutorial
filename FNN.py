@@ -136,7 +136,7 @@ class FNN(object):
                 self.loss=tf.reduce_mean(tf.nn.l2_loss((self.output - self.labels)))
                 tf.scalar_summary('loss', self.loss)
         else:
-            entropy = tf.nn.softmax_cross_entropy_with_logits(self.output, self.labels)
+            entropy = tf.nn.softmax_cross_entropy_with_logits(logits=self.output, labels=self.labels)
             with tf.name_scope('cross entropy'):
                 self.loss = tf.reduce_mean(entropy)
                 tf.scalar_summary('loss', self.loss)
