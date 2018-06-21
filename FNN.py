@@ -66,13 +66,13 @@ class FNN(object):
     def variable_summaries(self, var, name):
         with tf.name_scope(name+'_summaries'):
             mean = tf.reduce_mean(var)
-            tf.scalar_summary('mean/' + name, mean)
+            tf.summary.scalar('mean/' + name, mean)
         with tf.name_scope(name+'_stddev'):
             stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
-        tf.scalar_summary('_stddev/' + name, stddev)
-        tf.scalar_summary('_max/' + name, tf.reduce_max(var))
-        tf.scalar_summary('_min/' + name, tf.reduce_min(var))
-        tf.histogram_summary(name, var)
+        tf.summary.scalar('_stddev/' + name, stddev)
+        tf.summary.scalar('_max/' + name, tf.reduce_max(var))
+        tf.summary.scalar('_min/' + name, tf.reduce_min(var))
+        tf.summary.histogram(name, var)
 
     def layer(self,in_tensor, in_dim, out_dim, layer_name, act=tf.nn.relu):
         with tf.name_scope(layer_name):
@@ -85,9 +85,9 @@ class FNN(object):
                 self.variable_summaries(biases, layer_name + '/biases')
             with tf.name_scope(layer_name+'_Wx_plus_b'):
                 pre_activate = tf.matmul(in_tensor, weights) + biases
-                tf.histogram_summary(layer_name + '/pre_activations', pre_activate)
+                tf.summary.histogram(layer_name + '/pre_activations', pre_activate)
             activations = act(pre_activate, name='activation')
-            tf.histogram_summary(layer_name + '/activations', activations)
+            tf.summary.histogram(layer_name + '/activations', activations)
         return activations, tf.nn.l2_loss(weights)
 
     def drop_layer(self,in_tensor):
@@ -129,25 +129,25 @@ class FNN(object):
         with tf.name_scope('total_l2'):
             for l2 in self.total_l2:
                 self.l2_penalty+=l2
-            tf.scalar_summary('l2_penalty', self.l2_penalty)
+            tf.summary.scalar_('l2_penalty', self.l2_penalty)
                 
         if self.Task_type=='regression':
             with tf.name_scope('SSE'):
                 self.loss=tf.reduce_mean(tf.nn.l2_loss((self.output - self.labels)))
-                tf.scalar_summary('loss', self.loss)
+                tf.summary.scalar('loss', self.loss)
         else:
             entropy = tf.nn.softmax_cross_entropy_with_logits(logits=self.output, labels=self.labels)
             with tf.name_scope('cross entropy'):
                 self.loss = tf.reduce_mean(entropy)
-                tf.scalar_summary('loss', self.loss)
+                tf.summary.scalar('loss', self.loss)
             with tf.name_scope('accuracy'):
                 correct_prediction = tf.equal(tf.argmax(self.output, 1), tf.argmax(self.labels, 1))
                 self.accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
-                tf.scalar_summary('accuracy', self.accuracy)
+                tf.summary.scalar('accuracy', self.accuracy)
                 
         with tf.name_scope('total_loss'):
             self.total_loss=self.loss + self.l2_penalty*self.L2_lambda
-            tf.scalar_summary('total_loss', self.total_loss)
+            tf.summary.scalar_('total_loss', self.total_loss)
             
         #train
         with tf.name_scope('train'):
