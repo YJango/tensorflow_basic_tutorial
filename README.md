@@ -10,6 +10,8 @@ python2.7
 
 **特别感谢朱正源对代码的整理**
 
+---
+
 以下两个版本请同学根据个人环境进行学习
 
 ## JupyterNotebook_version
